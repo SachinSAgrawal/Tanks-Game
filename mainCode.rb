@@ -1,5 +1,6 @@
 require 'io/console'  
 
+# ANSI color codes for formatting
 class String
       def black;          "\033[30m#{self}\033[0m" end
       def red;            "\033[31m#{self}\033[0m" end
@@ -20,13 +21,17 @@ class String
       def bold;           "\033[1m#{self}\033[22m" end
       def reverse_color;  "\033[7m#{self}\033[27m" end
 end
+
+# Degrees to radians conversion
 class Numeric
   def degrees
     self * Math::PI / 180
   end
 end
-# introduction animation
+
+# Introduction animation
 def intro_animation()
+  # Two tanks colliding
   pad = "                                                      "
   pad2 = "  "
   for i in 0..25 do
@@ -44,6 +49,7 @@ def intro_animation()
     sleep(0.1)
   end
   sleep(0.5)
+  # Game and my name
   puts "                                  _________  ________  ________   ___  __    ________
                                  |\\___   ___\\\\   __  \\|\\   ___  \\|\\  \\|\\  \\ |\\   ____\\
                                  \\|___ \\  \\_\\ \\  \\|\\  \\ \\  \\\\ \\  \\ \\  \\/  /|\\ \\  \\___|_
@@ -60,6 +66,8 @@ def intro_animation()
                                             /_.___/\\__, /  /____/ /____/ /_/  /_/".green.bold + "
 ᴇᴅɪᴛᴇᴅ                                            ".gray + "/____/  ".green.bold
 end
+
+# Redefine to include exit command
 alias oldGets gets
 def gets
   inp = oldGets
@@ -69,8 +77,10 @@ def gets
     return inp
   end
 end
+
+# Generate map terrain
 class HightMapGen
-  # generate map terrain
+  # Parameters
   def initialize(width,startRange = 0.0..20.0,variance = 9,roughness = 0.4)
     @width = width
     @internalWidth = 2 ** (Math.log(width-1) / Math.log(2)).ceil + 1
@@ -78,6 +88,7 @@ class HightMapGen
     @variance = variance.to_f
     @roughness = roughness.to_f
   end
+  # Generation
   def gen()
     stepSize = @internalWidth - 1
     map = Array.new(@internalWidth)
@@ -98,6 +109,8 @@ class HightMapGen
     return map[0...@width]
   end
 end
+
+# Generate suitable height map for terrain
 mapGen = false
 while mapGen == false do
   a = HightMapGen.new(156)
@@ -114,7 +127,7 @@ while mapGen == false do
   end
 end
 
-# determine player locations
+# Determine player locations
 position = false
 while position == false do
   xp1 = rand(5..156)
@@ -124,7 +137,7 @@ while position == false do
   end
 end
 
-# combine terrain and player data
+# Combine terrain and player data
 map_random = Array.new
 map_random = map_random.fill('|' + ' '*156 + '|',5..45).fill('|' + '█'*156+'|',3..4).fill('|' + '#'*156+'|',0..2).map{|e| e+''}
 for @i in 0...10 do
@@ -132,16 +145,15 @@ for @i in 0...10 do
     map_random[44-(@i+4) - 27][@z+1] = world[@i][@z]
   end
 end
+
+# Find minimum height for each x-coord in terrain
 map_min_array = false
 map_min = Array.new
 i = 44
 for q in 1..156 do
   i = 44
-  # puts i
   while map_min_array == false
-    # puts i
     if map_random[i][q] != " " then
-      # puts "#{i} , #{q}"
       map_min_array = true
       map_min[q] = i
     end
@@ -149,6 +161,8 @@ for q in 1..156 do
   end
   map_min_array = false
 end
+
+# Find y-coord of each player's initial position
 p1_ylocation_test = false
 p2_ylocation_test = false
 i = 44
@@ -169,6 +183,8 @@ while p2_ylocation_test == false do
   end
   i = i - 1
 end
+
+# Define player symbols and adjust initial positions
 player_1 = "♛"
 player_2 = "♕"
 if xp1 > xp2 then
@@ -185,15 +201,12 @@ map_blank = Array.new
 map_blank = map_random.dup
 puts map_random.reverse.join("\n").gsub("♛","♛".cyan).gsub("♕","♕".red).gsub("#","#".brown).gsub("█","█".green)
 
-# create actual map
+# Create the actual map
 def draw_map(x, y, map_random, map_blank)
   print "\e[0;0f"
   if x < 0 then
     x = 156 + x
   end
-  # if x > 156 then
-  #   x = (x - 156)
-  # end
   if x > 156 then
     x = (x - 156)
   end
@@ -208,10 +221,9 @@ def draw_map(x, y, map_random, map_blank)
     part = " "
   end
   map_random[y][x] = part
-  # map_random[y][x] = map_blank[y][x]
 end
 
-# velocity input
+# Velocity input
 def get_velocity(turn)
   good_velocity = false
   while good_velocity == false do
@@ -230,7 +242,7 @@ def get_velocity(turn)
   return velocity
 end
 
-# angle input
+# Angle input
 def get_angle(turn)
   good_angle = false
   while good_angle == false do
@@ -249,15 +261,17 @@ def get_angle(turn)
   return angle
 end
 
-# sets everything up
+# Set everything up
 puts intro_animation()
 x = 2
 y = 2
+# Instructions
 puts "Goal: Aim and fire you tank's projectile to hit the other player's tank to win."
 sleep(1)
 puts "Instructions: First, enter an angle to aim your projectile. Then enter the velocity to fire. Watch the projectile fly across the screen. It will wrap around if necessary. Good luck!"
 puts ""
 sleep(3)
+# Player names
 puts "To start, enter your names."
 puts "Player 1 Name:"
 p1_name = gets.chomp
@@ -269,7 +283,7 @@ draw_map(x, y, map_random, map_blank)
 puts "Player 1: #{p1_name}".cyan
 puts "Player 2: #{p2_name}".red
 
-# during the actual game
+# Managing the game state
 gameOver = false
 while gameOver == false
   closingsequence = false
@@ -278,14 +292,13 @@ while gameOver == false
   time = 0.0
   particle_live = true
   print "\a"
+  # Loop for projectile motion
   while particle_live == true do
     x = (velocity * time *Math.cos(angle.degrees))
     y = (velocity * time *Math.sin(angle.degrees) - 0.5*9.8*time*time)
-    # if time < 0.6 and time > 0.0 then
-    #   y = y + 5
-    # end
     time = time + 0.02
     sleep(0.02)
+    # Adjusting projectile position based on player locations
     if turn == "1" then
       if xp1 < xp2 then
         y = (y + yp1).to_i
@@ -308,8 +321,8 @@ while gameOver == false
     end
 
     x%=156
-    #puts "INSIDE LOOP: #{x},#{y}"
 
+    # Check for collision and switch turns if necessary
     if y == map_min[x] and time > 0.2 then
         particle_live = false
         if turn == "1" then
@@ -322,7 +335,7 @@ while gameOver == false
         draw_map(x, y, map_random, map_blank)
     end
     draw_map(x, y, map_random, map_blank)
-    # winner animations
+    # # Check for winner and display animation
     if turn == "2" and x < (xp1 + 3) and x > (xp1 - 3)  and y < (yp1 + 1) and y > (yp1 - 1) then
       system "clear"
       puts "ℂ𝕠𝕟𝕘𝕣𝕒𝕥𝕦𝕝𝕒𝕥𝕚𝕠𝕟𝕤"
@@ -348,6 +361,7 @@ while gameOver == false
       closingsequence = true
     end
   end
+  # Handle end game sequence
   if closingsequence == true
     system "clear"
     puts "Press any key to quit."
@@ -355,5 +369,5 @@ while gameOver == false
     gameOver = true
     system "clear"
   end
-  print "\a" #play sound
+  print "\a"
 end
